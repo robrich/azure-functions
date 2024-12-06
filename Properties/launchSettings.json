@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "Project": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7000",
+      "environmentVariables": {
+        "AZURE_FUNCTIONS_ENVIRONMENT": "Development",
+        "MySetting": "MyValue"
+      }
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "containerRunArguments": "--init",
+      "httpPort": 30301,
+      "useSSL": false
+    }
+  }
+}

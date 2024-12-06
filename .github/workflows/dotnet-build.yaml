@@ -1,0 +1,61 @@
+name: .NET Function Container Build
+
+on:
+  push:
+    branches:
+    - main
+    - develop
+    - 'release/**'
+    - 'hotfix/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      checks: write
+      issues: read
+      pull-requests: write
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v4
+
+    - name: Form image tag from Git
+      id: label
+      run: |
+        echo "label=${{ github.sha }}-$(echo ${{ github.ref_name }} | tr / -)" >> $GITHUB_OUTPUT
+
+    - name: Docker Login
+      uses: docker/login-action@v3.0.0
+      with:
+        registry: ${{ vars.ACR_URL }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+        logout: true
+
+    # for Func deploy
+    - name: Azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Docker Build & Push
+      run: |
+        echo "branch = ${{ github.ref_name }} hash = ${{ github.sha }} label = ${{ steps.label.outputs.label }}"
+        docker build --tag robrich.azurecr.io/func1:${{ steps.label.outputs.label }} --target final .
+        docker push robrich.azurecr.io/func1:${{ steps.label.outputs.label }}
+
+    - name: Function deploy
+      uses: Azure/functions-container-action@v1
+      id: fa
+      with:
+        app-name: ${{ vars.AZURE_FUNCTION_NAME }}
+        image: robrich.azurecr.io/func1:${{ steps.label.outputs.label }}
+        
+    - name: Azure logout
+      if: always() # even if tests fail
+      run: |
+        az logout

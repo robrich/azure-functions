@@ -1,0 +1,14 @@
+# downloaded files
+
+# built files
+bin
+obj
+# user files
+.vs
+*.user
+*.suo
+# temp files
+.DS_Store
+*.orig
+# secrets
+local.settings.json
